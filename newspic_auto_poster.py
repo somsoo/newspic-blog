@@ -60,7 +60,7 @@ Evaluate the [SEO_BODY] section on three criteria (0-100 score each):
 2. GEO (Generative Engine Optimization): Clear structured data, concise facts for AI to parse.
 3. AEO (Answer Engine Optimization): Direct answers to the user's implicit question.
 
-If the total score is below 285/300, completely REWRITE the [SEO_BODY] section to be perfectly optimized (1000 words).
+If the total score is below 285/300, logically MODIFY and REFINE the [SEO_BODY] section to improve the score. Do NOT rewrite from scratch. Enhance the vocabulary, headings, and keyword density while strictly preserving the structure.
 Ensure the [TITLE] and [HOOK] remain incredibly sensational and click-inducing.
 CRITICAL: You must return the response in the exact same format: [TITLE]... [HOOK]... [SEO_BODY]..."""
 
