@@ -29,11 +29,9 @@ def generate_content(category):
 다음의 정확한 포맷을 준수하여 작성해야 합니다:
 
 [TITLE]
-(클릭을 유도하는 자극적인 제목)
-[HOOK]
-(스레드 및 블로그 상단에 노출될 3줄짜리 도파민 유발 후킹 멘트. 독자가 뒷내용을 미치도록 궁금하게 만들고 끝내세요.)
+(검색자가 클릭할 수밖에 없는 구글 SEO 최적화 제목)
 [SEO_BODY]
-(구글 검색 로봇이 좋아할 1000자 분량의 객관적이고 전문적인 뉴스/정보 텍스트. H2, H3 태그를 적절히 사용하세요.)
+(구글 검색 봇이 사랑하는 1500자 분량의 객관적이고 전문적인 정보 텍스트. H2, H3 태그를 적절히 사용하세요.)
 """
     
     models_to_try = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite']
@@ -81,8 +79,7 @@ CRITICAL: You must return the response in the exact same format: [TITLE]... [HOO
         
     # Parsing the output
     try:
-        title = text.split('[TITLE]')[1].split('[HOOK]')[0].strip()
-        hook = text.split('[HOOK]')[1].split('[SEO_BODY]')[0].strip()
+        title = text.split('[TITLE]')[1].split('[SEO_BODY]')[0].strip()
         body = text.split('[SEO_BODY]')[1].strip()
     except Exception as e:
         print("Parsing failed, returning raw text as body")
@@ -90,12 +87,12 @@ CRITICAL: You must return the response in the exact same format: [TITLE]... [HOO
         hook = "지금 막 들어온 엄청난 소식입니다."
         body = text
     
-    hook_html = "".join([f"<p class='mb-3'>{line}</p>" for line in hook.split('\n') if line.strip()])
+    hook_html = ""
     body_html = "".join([f"<p>{line}</p>" for line in body.split('\n') if line.strip()])
     
     return title, hook, hook_html, body_html
 
-def create_html(nid, title, hook_raw, hook_html, body_html):
+def create_html(nid, title, hook_html, body_html):
     target_link = f"https://www.newspic.kr/view.html?nid={nid}&pn={PARTNER_ID}"
     thumbnail_url = "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=60"
     
@@ -156,7 +153,6 @@ if __name__ == "__main__":
     categories = ['연예/이슈', '경제/재테크', '사회/사건사고', '스포츠/건강']
     nids = get_latest_newspic(count=len(categories))
     
-    threads_list = []
     
     for i, category in enumerate(categories):
         if i >= len(nids): break
@@ -164,14 +160,9 @@ if __name__ == "__main__":
         print(f"Generating for {category} with NID: {nid}")
         try:
             title, hook_raw, hook_html, body = generate_content(category)
-            create_html(nid, title, hook_raw, hook_html, body)
+            create_html(nid, title, hook_html, body)
             
-            threads_list.append({
-                "title": title,
-                "thread_post": f"{hook_raw}\n\n👉 더 내용 보기: https://somsoo.github.io/newspic-blog/article_{nid}.html",
-                "nid": nid,
-                "category": category
-            })
+            
         except Exception as e:
             print(f"Failed to generate {category}: {e}")
             
