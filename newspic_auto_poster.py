@@ -9,20 +9,22 @@ from google import genai
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 PARTNER_ID = "7440c8"
 
-def get_latest_newspic():
+def get_latest_newspic(count=4):
     headers = {'User-Agent': 'Mozilla/5.0'}
     resp = requests.get('https://www.newspic.kr/', headers=headers)
-    nid_matches = re.findall(r'view\.html\?nid=([0-9a-zA-Z]+)', resp.text)
+    nid_matches = list(set(re.findall(r'view\.html\?nid=([0-9a-zA-Z]+)', resp.text)))
     if not nid_matches:
         raise Exception("Could not find NIDs")
-    return random.choice(nid_matches[:30])
+    import random
+    random.shuffle(nid_matches)
+    return nid_matches[:count]
 
-def generate_content():
+def generate_content(category):
     client = genai.Client(api_key=GEMINI_API_KEY)
     
     # 1. First Pass: Generate Initial Draft
     prompt = """당신은 대형 커뮤니티(디시인사이드, 에펨코리아 등)의 가십/속보 전문 마케터이자, 동시에 구글 SEO 전문가입니다.
-한국의 현재 가장 핫한 트렌드(연예, 사회, 경제 등)에 대한 글을 작성해주세요.
+한국의 현재 현재 대한민국에서 가장 핫한 [{category}] 분야의 트렌드나 이슈에 대한 글을 작성해주세요.
 
 다음의 정확한 포맷을 준수하여 작성해야 합니다:
 
@@ -38,7 +40,7 @@ def generate_content():
     response = None
     for model_name in models_to_try:
         try:
-            response = client.models.generate_content(model=model_name, contents=prompt)
+            response = client.models.generate_content(model=model_name, contents=prompt.replace("{category}", category))
             print(f'Successfully generated content using model: {model_name}')
             break
         except Exception as e:
@@ -151,6 +153,29 @@ def create_html(nid, title, hook_raw, hook_html, body_html):
     print(f"Created article_{nid}.html and latest_thread.json")
 
 if __name__ == "__main__":
-    nid = get_latest_newspic()
-    title, hook_raw, hook_html, body = generate_content()
-    create_html(nid, title, hook_raw, hook_html, body)
+    categories = ['연예/이슈', '경제/재테크', '사회/사건사고', '스포츠/건강']
+    nids = get_latest_newspic(count=len(categories))
+    
+    threads_list = []
+    
+    for i, category in enumerate(categories):
+        if i >= len(nids): break
+        nid = nids[i]
+        print(f"Generating for {category} with NID: {nid}")
+        try:
+            title, hook_raw, hook_html, body = generate_content(category)
+            create_html(nid, title, hook_raw, hook_html, body)
+            
+            threads_list.append({
+                "title": title,
+                "thread_post": f"{hook_raw}\n\n👉 더 내용 보기: https://somsoo.github.io/newspic-blog/article_{nid}.html",
+                "nid": nid,
+                "category": category
+            })
+        except Exception as e:
+            print(f"Failed to generate {category}: {e}")
+            
+    with open("latest_thread.json", "w", encoding="utf-8") as f:
+        import json
+        json.dump(threads_list, f, ensure_ascii=False, indent=2)
+
