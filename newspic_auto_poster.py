@@ -1,4 +1,5 @@
 import os
+import random
 import requests
 import re
 import json
@@ -14,7 +15,7 @@ def get_latest_newspic():
     nid_matches = re.findall(r'view\.html\?nid=([0-9a-zA-Z]+)', resp.text)
     if not nid_matches:
         raise Exception("Could not find NIDs")
-    return nid_matches[0]
+    return random.choice(nid_matches[:30])
 
 def generate_content():
     client = genai.Client(api_key=GEMINI_API_KEY)
