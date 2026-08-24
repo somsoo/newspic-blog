@@ -99,6 +99,7 @@ def create_html(nid, title, hook_raw, hook_html, body_html):
     html = f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
+    <script async src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2228289204702106' crossorigin='anonymous'></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
