@@ -10,14 +10,34 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 PARTNER_ID = "7440c8"
 
 def get_latest_newspic(count=4):
+    history_file = "posted_nids.txt"
+    posted_nids = set()
+    if os.path.exists(history_file):
+        with open(history_file, 'r', encoding='utf-8') as f:
+            posted_nids = set(f.read().splitlines())
+
     headers = {'User-Agent': 'Mozilla/5.0'}
     resp = requests.get('https://www.newspic.kr/', headers=headers)
-    nid_matches = list(set(re.findall(r'view\.html\?nid=([0-9a-zA-Z]+)', resp.text)))
-    if not nid_matches:
-        raise Exception("Could not find NIDs")
+    all_nids = list(set(re.findall(r'view\.html\?nid=([0-9a-zA-Z]+)', resp.text)))
+    
+    # Filter out already posted NIDs
+    fresh_nids = [nid for nid in all_nids if nid not in posted_nids]
+    
+    if not fresh_nids:
+        print("No fresh news available right now.")
+        return []
+        
     import random
-    random.shuffle(nid_matches)
-    return nid_matches[:count]
+    random.shuffle(fresh_nids)
+    selected_nids = fresh_nids[:count]
+    
+    # Save to history
+    with open(history_file, 'a', encoding='utf-8') as f:
+        for nid in selected_nids:
+            f.write(nid + "
+")
+            
+    return selected_nids
 
 def generate_content(category):
     client = genai.Client(api_key=GEMINI_API_KEY)
